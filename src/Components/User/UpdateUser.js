@@ -1,39 +1,41 @@
 
-import React, { useState, useReducer } from "react";
+import React, { useState,useRef} from "react";
 import Card from "../UI/Card";
 import Button from "../UI/Buttons/Button";
 import classes from "./AddUser.module.css";
 
-const addressReducer = (state, action) => {
-  if (action.type === "ADD_ADDRESS1") {
-    return { addressLine1: action.val, addressLine2: state.addressLine2 };
-  }
-  if (action.type === "ADD_ADDRESS2") {
-    return { addressLine1: state.addressLine1, addressLine2: action.val };
-  }
-  if (action.type === "RESET") {
-    return { addressLine1: "", addressLine2: "" };
-  }
-  return { addressLine1: "", addressLine2: "" };
-};
-
 const UpdateUser = (props) => {
 
-  const [enteredFirstName, setEnteredFirstName] = useState(props.userData.firstName);
-  const [enteredLastName, setEnteredLastName] = useState(props.userData.lastName);
-  const [enteredDate, setEnteredDate] = useState(props.userData.dateOfBirth);
-  const [dateValid, setDateValid] = useState(true);
-  const [enteredPlace, setEnteredPlace] = useState(props.userData.placeOfBirth);
-  const [enteredPhoneNumber, setEnteredPhoneNumber] = useState(props.userData.phoneNumber);
-  const [phoneValid, phoneIsValid] = useState(true);
-  const [addressState, dispatchAddress] = useReducer(addressReducer, {
-    addressLine1: props.userData.addressLine1,
-    addressLine2: props.userData.addressLine2,
+  console.log("PROPS", props)
+console.log("currentUSerData",props.currentUserData);
+  const [isValid, setIsValid] = useState({
+    touchFirstName: false,
+    touchLastName: false,
+    dateValid: true,
+    touchPlace: false,
+    phoneValid: true,
+    touchAddress1: false,
+    touchAddress2: false,
   });
 
-  const reset = () => dispatchAddress({ type: "RESET" });
+  const [enteredFirstName, setEnteredFirstName] = useState(props.currentUserData ? props.currentUserData.firstName : "");
+  const [enteredLastName, setEnteredLastName] = useState(props.currentUserData ? props.currentUserData.lastName : "");
+  const [enteredDate, setEnteredDate] = useState(props.currentUserData ? props.currentUserData.dateOfBirth : "");
+  const [enteredPlace, setEnteredPlace] = useState(props.currentUserData ? props.currentUserData.placeOfBirth : "")
+  const [enteredPhoneNumber, setEnteredPhoneNumber] = useState(props.currentUserData ? props.currentUserData.phoneNumber : "")
+  const [addressLine1, setAdressLine1] = useState(props.currentUserData ? props.currentUserData.addressLine1 : "");
+  const [addressLine2, setAdressLine2] = useState(props.currentUserData ? props.currentUserData.addressLine2 : "");
+  // const[image,setImage]=useState(null);
+  const fileInputRef = useRef(null);
+  
   const firstnameChangeHandler = (event) => {
+    setIsValid((prevState) => ({ ...prevState, touchFirstName: true }));
     setEnteredFirstName(event.target.value);
+  };
+
+  const lastNameChangeHandler = (event) => {
+    setIsValid((prevState) => ({ ...prevState, touchLastName: true }));
+    setEnteredLastName(event.target.value);
   };
   const dateChangeHandler = (event) => {
     // setEnteredDate(event.target.value);
@@ -41,38 +43,56 @@ const UpdateUser = (props) => {
     const currentDate = new Date();
 
     if (selectedDate > currentDate) {
-      setDateValid(false);
+      setIsValid((prevState) => ({ ...prevState, dateValid: false }));
       setEnteredDate("");
     } else {
       let date = JSON.stringify(selectedDate);
       date = date.slice(1, 11);
       setEnteredDate(date);
-      setDateValid(true);
+      setIsValid((prevState) => ({ ...prevState, dateValid: true }));
     }
   };
 
   const phoneNumberChangeHandler = (event) => {
     const phoneValue = event.target.value;
     if (phoneValue.trim().length > 10) {
-      phoneIsValid(false);
+      setIsValid((prevState) => ({ ...prevState, phoneValid: false }));
       setEnteredPhoneNumber("");
     } else {
       setEnteredPhoneNumber(phoneValue);
-      phoneIsValid(true);
+      setIsValid((prevState) => ({ ...prevState, phoneValid: true }));
     }
   };
 
   const placeChangeHandler = (event) => {
+    setIsValid((prevState) => ({ ...prevState, touchPlace: true }));
+
     setEnteredPlace(event.target.value);
   };
 
   const address1ChangeHandler = (event) => {
-    dispatchAddress({ type: "ADD_ADDRESS1", val: event.target.value });
-  };
-
+    setAdressLine1(event.target.value);
+    setIsValid((prevState) => ({ ...prevState, touchAddress1: true }));
+  }
   const address2ChangeHandler = (event) => {
-    dispatchAddress({ type: "ADD_ADDRESS2", val: event.target.value });
+    setAdressLine2(event.target.value);
+    setIsValid((prevState) => ({ ...prevState, touchAddress2: true }));
+  }
+
+  const handleFileSelect = (event) => {
+    const file = fileInputRef.current.files[0];
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      console.log(event.target.result);
+      const dataUrl = event.target.result;
+      props.onFileSelect(dataUrl); 
+    };
+    reader.readAsDataURL(file);
+    //  if (event.target.files && event.target.files[0]) {
+    //   setImage(URL.createObjectURL(event.target.files[0]));
+    // }
   };
+  
 
   const submitHandler = (event) => {
     event.preventDefault();
@@ -82,8 +102,8 @@ const UpdateUser = (props) => {
       enteredLastName.trim().length < 2 ||
       +enteredPhoneNumber < 1 ||
       enteredPlace.trim().length < 2 ||
-      addressState.addressLine1.trim().length < 2 ||
-      addressState.addressLine2.trim().length < 2 ||
+      addressLine1.trim().length < 2 ||
+      addressLine2.trim().length < 2 ||
       enteredDate.trim().length < 2
     ) {
       return;
@@ -95,20 +115,33 @@ const UpdateUser = (props) => {
       dateOfBirth: enteredDate,
       placeOfBirth: enteredPlace,
       phoneNumber: +enteredPhoneNumber,
-      addressLine1: addressState.addressLine1,
-      addressLine2: addressState.addressLine2,
-      id: props.userData.id,
+      addressLine1:addressLine1,
+      addressLine2:addressLine2,
+      id: props.currentUserData ? props.currentUserData.id : Math.random().toString(),
     };
-    // console.log(enteredDate);
     console.log(userData);
-    props.onupdateData(userData);
 
+    if (props.isCreate) {
+      props.onAddData(userData)
+    } else {
+      props.onupdateData(userData);
+    }
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
     setEnteredFirstName("");
     setEnteredLastName("");
     setEnteredDate("");
     setEnteredPlace("");
     setEnteredPhoneNumber("");
-    reset();
+    setAdressLine1("");
+    setAdressLine2("");
+    setIsValid((prevState) => ({ ...prevState, touchFirstName: false }));
+    setIsValid((prevState) => ({ ...prevState, touchLastName: false }));
+    setIsValid((prevState) => ({ ...prevState, touchPlace: false }));
+    setIsValid((prevState) => ({ ...prevState, touchAddress1: false }));
+    setIsValid((prevState) => ({ ...prevState, touchAddress2: false }));
   };
 
   return (
@@ -121,7 +154,7 @@ const UpdateUser = (props) => {
           value={enteredFirstName}
           onChange={firstnameChangeHandler}
         />
-        {enteredFirstName.trim().length < 2 && (
+         {enteredFirstName.trim().length < 2 && isValid.touchFirstName && (
           <p style={{ color: "red" }}>Please enter proper firstname.</p>
         )}
         <label htmlFor="lastname">Last Name</label>
@@ -129,9 +162,9 @@ const UpdateUser = (props) => {
           id="lastname"
           type="text"
           value={enteredLastName}
-          onChange={(e) => setEnteredLastName(e.target.value)}
+          onChange={lastNameChangeHandler}
         />
-        {enteredLastName.trim().length < 2 && (
+       {enteredLastName.trim().length < 2 && isValid.touchLastName && (
           <p style={{ color: "red" }}>Please enter proper lastname.</p>
         )}
         <label htmlFor="birthdate">D.O.B</label>
@@ -141,7 +174,7 @@ const UpdateUser = (props) => {
           value={enteredDate}
           onChange={dateChangeHandler}
         />
-        {!dateValid && (
+        {!isValid.dateValid && (
           <p style={{ color: "red" }}>Birth date cannot be in the future</p>
         )}
         <label>Address Line 1: </label>
@@ -149,9 +182,9 @@ const UpdateUser = (props) => {
           rows={5}
           cols={15}
           onChange={address1ChangeHandler}
-          value={addressState.addressLine1}
+          value={addressLine1}
         />
-        {addressState.addressLine1.trim().length < 2 && (
+        {addressLine1.trim().length < 5 && isValid.touchAddress1 && (
           <p style={{ color: "red" }}>Length is short.</p>
         )}
         <label>Address Line 2: </label>
@@ -159,14 +192,14 @@ const UpdateUser = (props) => {
           rows={5}
           cols={15}
           onChange={address2ChangeHandler}
-          value={addressState.addressLine2}
+          value={addressLine2}
         />
-        {addressState.addressLine2.trim().length < 2 && (
+         {addressLine2.trim().length < 5 && isValid.touchAddress2 && (
           <p style={{ color: "red" }}>Length is short.</p>
         )}
         <label>Place of Birth</label>
         <input type="text" value={enteredPlace} onChange={placeChangeHandler} />
-        {enteredPlace.trim().length < 2 && (
+        {enteredPlace.trim().length < 2 && isValid.touchPlace && (
           <p style={{ color: "red" }}>Length is short.Enter proper place.</p>
         )}
 
@@ -174,15 +207,22 @@ const UpdateUser = (props) => {
         <input
           id="phonenumber"
           type="number"
-          maxLength={10}
           onChange={phoneNumberChangeHandler}
           value={enteredPhoneNumber}
           className={classes["hide-number-arrow"]}
         />
-        {!phoneValid && (
+       {!isValid.phoneValid && (
           <p style={{ color: "red" }}>Phone number cannot be more than 10.</p>
         )}
-        <Button type="submit">Update User</Button>
+        <label htmlFor="profilephoto">Profile Picture</label>
+        <input
+          type="file"
+          id="fileInput"
+          ref={fileInputRef}
+          accept=".jpg,.png"
+          onChange={handleFileSelect}
+        />
+        <Button type="submit">{props.isCreate ? "Add User" : "Update User"}</Button>
       </form>
     </Card>
   );

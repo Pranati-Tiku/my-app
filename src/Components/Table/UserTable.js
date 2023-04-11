@@ -1,14 +1,12 @@
 import React from "react";
 import classes from './UserTable.module.css';
-import Card from "../UI/Card";
 import DeleteButton from "../UI/Buttons/DeleteButton";
 import UpdateButton from "../UI/Buttons/UpdateButton";
 
 const UserTable = (props) => {
   return (
-    <Card className={classes.table}>
-<div className={classes['table-responsive']}>
-      <table>
+    <div className={classes['table-container']}>
+      <table className={classes.table}>
         <tbody>
           <tr>
             <th>Name</th>
@@ -18,6 +16,7 @@ const UserTable = (props) => {
             <th>Phone Number</th>
             <th>Update</th>
             <th>Delete</th>
+            <th>Picture</th>
           </tr>
           {props.users.map((user) => {
             return (
@@ -29,13 +28,15 @@ const UserTable = (props) => {
                 <td>{user.phoneNumber}</td>
                 <td><UpdateButton id={user.id} updateItem={props.onUpdateButtonClick}>Update</UpdateButton></td>
                 <td><DeleteButton id={user.id} deleteItem={props.onDeleteButtonClick}>Delete</DeleteButton></td>
-              </tr>
+              <td>{props.profilePhotoDataUrl ? (<img src={props.profilePhotoDataUrl} alt="profile"  style={{ objectFit: 'cover',width:'100px',height:'100px' }}/>) : null}</td>
+                {/* <td><img src={user.image} alt="" style={{ objectFit: 'cover',width:'100px',height:'100px' }}/></td> */}
+             </tr>
             )
           })}
         </tbody>
       </table>
-      </div>
-    </Card>
+       </div>
+      
   );
 };
 export default UserTable;

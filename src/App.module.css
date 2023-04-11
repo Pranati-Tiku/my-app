@@ -5,12 +5,9 @@
 }
 .body{
   margin:0;
-  background: pink;
 }
 .App {
   text-align: center;
-  max-width: 80%;
-  margin:auto;
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
@@ -18,8 +15,9 @@
 }
 
 .section{
+  padding:1rem;
+  margin:2rem;
   flex:1;
   justify-content: center;
   align-items: center;
 }
-
